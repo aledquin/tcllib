@@ -1,10 +1,10 @@
 # Debug - a debug narrative logger.
 # -- Colin McCormack / originally Wub server utilities
 #
-# Debugging areas of interest are represented by 'tokens' which have 
+# Debugging areas of interest are represented by 'tokens' which have
 # independantly settable levels of interest (an integer, higher is more detailed)
 #
-# Debug narrative is provided as a tcl script whose value is [subst]ed in the 
+# Debug narrative is provided as a tcl script whose value is [subst]ed in the
 # caller's scope if and only if the current level of interest matches or exceeds
 # the Debug call's level of detail.  This is useful, as one can place arbitrarily
 # complex narrative in code without unnecessarily evaluating it.
@@ -20,9 +20,9 @@ package require Tcl 8.5
 
 namespace eval ::debug {
     namespace export -clear \
-	define on off prefix suffix header trailer \
-	names 2array level setting parray pdict \
-	nl tab hexl
+        define on off prefix suffix header trailer \
+        names 2array level setting parray pdict \
+        nl tab hexl
     namespace ensemble create -subcommands {}
 }
 
@@ -34,8 +34,8 @@ proc ::debug::noop {args} {}
 proc ::debug::debug {tag message {level 1}} {
     variable detail
     if {$detail($tag) < $level} {
-	#puts stderr "$tag @@@ $detail($tag) >= $level"
-	return
+        #puts stderr "$tag @@@ $detail($tag) >= $level"
+        return
     }
 
     variable prefix
@@ -45,9 +45,9 @@ proc ::debug::debug {tag message {level 1}} {
     variable fds
 
     if {[info exists fds($tag)]} {
-	set fd $fds($tag)
+        set fd $fds($tag)
     } else {
-	set fd stderr
+        set fd stderr
     }
 
     # Assemble the shown text from the user message and the various
@@ -63,36 +63,34 @@ proc ::debug::debug {tag message {level 1}} {
     # Resolve variables references and command invokations embedded
     # into the message with plain text.
     set code [catch {
-	set smessage [uplevel 1 [list ::subst -nobackslashes $themessage]]
-	set sheader  [uplevel 1 [list ::subst -nobackslashes $header]]
-	set strailer [uplevel 1 [list ::subst -nobackslashes $trailer]]
+        set smessage [uplevel 1 [list ::subst -nobackslashes $themessage]]
+        set sheader  [uplevel 1 [list ::subst -nobackslashes $header]]
+        set strailer [uplevel 1 [list ::subst -nobackslashes $trailer]]
     } __ eo]
 
     # And dump an internal error if that resolution failed.
     if {$code} {
-	if {[catch {
-	    set caller [info level -1]
-	}]} { set caller GLOBAL }
-	if {[string length $caller] >= 1000} {
-	    set caller "[string range $caller 0 200]...[string range $caller end-200 end]"
-	}
-	foreach line [split $caller \n] {
-	    puts -nonewline $fd "@@(DebugError from $tag ($eo): $line)"
-	}
-	return
+        if {[catch {set caller [info level -1]}]} { set caller GLOBAL }
+        if {[string length $caller] >= 1000} {
+            set caller "[string range $caller 0 200]...[string range $caller end-200 end]"
+        }
+        foreach line [split $caller \n] {
+            puts -nonewline $fd "@@(DebugError from $tag ($eo): $line)"
+        }
+        return
     }
 
     # From here we have a good message to show. We only shorten it a
     # bit if its a bit excessive in size.
 
     if {[string length $smessage] > 4096} {
-	set head [string range $smessage 0 2048]
-	set tail [string range $smessage end-2048 end]
-	set smessage "${head}...(truncated)...$tail"
+        set head [string range $smessage 0 2048]
+        set tail [string range $smessage end-2048 end]
+        set smessage "${head}...(truncated)...$tail"
     }
 
     foreach line [split $smessage \n] {
-	puts $fd "$sheader$tag | $line$strailer"
+        puts $fd "$sheader$tag | $line$strailer"
     }
     return
 }
@@ -107,11 +105,11 @@ proc ::debug::2array {} {
     variable detail
     set result {}
     foreach n [lsort [array names detail]] {
-	if {[interp alias {} debug.$n] ne "::debug::noop"} {
-	    lappend result $n $detail($n)
-	} else {
-	    lappend result $n -$detail($n)
-	}
+        if {[interp alias {} debug.$n] ne "::debug::noop"} {
+            lappend result $n $detail($n)
+        } else {
+            lappend result $n -$detail($n)
+        }
     }
     return $result
 }
@@ -121,16 +119,16 @@ proc ::debug::level {tag {level ""} {fd {}}} {
     variable detail
     # TODO: Force level >=0.
     if {$level ne ""} {
-	set detail($tag) $level
+        set detail($tag) $level
     }
 
     if {![info exists detail($tag)]} {
-	set detail($tag) 1
+        set detail($tag) 1
     }
 
     variable fds
     if {$fd ne {}} {
-	set fds($tag) $fd
+        set fds($tag) $fd
     }
 
     return $detail($tag)
@@ -187,21 +185,21 @@ proc ::debug::off {tag {level ""} {fd {}}} {
 
 proc ::debug::setting {args} {
     if {[llength $args] == 1} {
-	set args [lindex $args 0]
+        set args [lindex $args 0]
     }
     set fd stderr
     if {[llength $args] % 2} {
-	set fd   [lindex $args end]
-	set args [lrange $args 0 end-1]
+        set fd   [lindex $args end]
+        set args [lrange $args 0 end-1]
     }
     foreach {tag level} $args {
-	if {$level > 0} {
-	    level $tag $level $fd
-	    interp alias {} debug.$tag {} ::debug::debug $tag
-	} else {
-	    level $tag [expr {-$level}] $fd
-	    interp alias {} debug.$tag {} ::debug::noop
-	}
+        if {$level > 0} {
+            level $tag $level $fd
+            interp alias {} debug.$tag {} ::debug::debug $tag
+        } else {
+            level $tag [expr {-$level}] $fd
+            interp alias {} debug.$tag {} ::debug::noop
+        }
     }
     return
 }
@@ -217,7 +215,7 @@ proc ::debug::tab {} { return \t }
 proc ::debug::parray {a {pattern *}} {
     upvar 1 $a array
     if {![array exists array]} {
-	error "\"$a\" isn't an array"
+        error "\"$a\" isn't an array"
     }
     pdict [array get array] $pattern
 }
@@ -226,17 +224,17 @@ proc ::debug::pdict {dict {pattern *}} {
     set maxl 0
     set names [lsort -dict [dict keys $dict $pattern]]
     foreach name $names {
-	if {[string length $name] > $maxl} {
-	    set maxl [string length $name]
-	}
+        if {[string length $name] > $maxl} {
+            set maxl [string length $name]
+        }
     }
     set maxl [expr {$maxl + 2}]
     set lines {}
     foreach name $names {
-	set nameString [format (%s) $name]
-	lappend lines [format "%-*s = %s" \
-			   $maxl $nameString \
-			   [dict get $dict $name]]
+        set nameString [format (%s) $name]
+        lappend lines [format "%-*s = %s" \
+            $maxl $nameString \
+            [dict get $dict $name]]
     }
     return [join $lines \n]
 }
@@ -263,19 +261,19 @@ proc ::debug::hexl {data {prefix {}}} {
     # The hex part is handled in groups of 32 nibbles.
     set addr 0
     while {[string length $hexa]} {
-	# Get front group of 16 bytes each.
-	set hex    [string range $hexa   0 31]
-	set ascii  [string range $asciia 0 15]
-	# Prep for next iteration
-	set hexa   [string range $hexa   32 end]  
-	set asciia [string range $asciia 16 end]
+        # Get front group of 16 bytes each.
+        set hex    [string range $hexa   0 31]
+        set ascii  [string range $asciia 0 15]
+        # Prep for next iteration
+        set hexa   [string range $hexa   32 end]
+        set asciia [string range $asciia 16 end]
 
-	# Convert the hex to pairs of hex digits
-	regsub -all -- {..} $hex {& } hex
+        # Convert the hex to pairs of hex digits
+        regsub -all -- {..} $hex {& } hex
 
-	# Add the hex and latin-1 data to the result buffer
-	append r $prefix [format %04x $addr] { | } $hex { |} $ascii |\n
-	incr addr 16
+        # Add the hex and latin-1 data to the result buffer
+        append r $prefix [format %04x $addr] { | } $hex { |} $ascii |\n
+        incr addr 16
     }
 
     # And done
